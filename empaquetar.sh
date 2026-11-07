@@ -13,10 +13,11 @@ cp Resources/com.ivanzu.embery.guardia.plist $app/Contents/Library/LaunchAgents/
 mkdir -p $app/Contents/Resources
 install -m 755 Resources/embery-hook Resources/embery-status $app/Contents/Resources/
 cp -RX Resources/*.lproj $app/Contents/Resources/
-# El icono (Icon/AppIcon.icon) se compila con actool solo si cambió.
+# El icono compilado viene en el repo; con actool (Xcode) se recompila si Icon/AppIcon.icon cambió.
 car=Resources/Assets.car
-# Sin actool (viene con Xcode) la app sale igual, sin icono.
-if [[ ! -f $car || -n "$(find Icon/AppIcon.icon -newer $car | head -1)" ]]; then tools/make_icon.sh || echo "aviso: no se pudo compilar el icono"; fi
+if xcrun -f actool >/dev/null 2>&1 && [[ ! -f $car || -n "$(find Icon/AppIcon.icon -newer $car | head -1)" ]]; then
+  tools/make_icon.sh || echo "aviso: no se pudo recompilar el icono; se usa el que viene en el repo"
+fi
 [[ -f $car ]] && cp -X $car Resources/AppIcon.icns $app/Contents/Resources/
 codesign --force --sign - $app
 echo "$app"

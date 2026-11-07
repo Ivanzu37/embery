@@ -32,7 +32,7 @@ The interface is in English and Spanish and follows your system language.
 ## Requirements
 
 - macOS 27 or later. The Nook needs a Mac with a notch.
-- To build: Xcode 27 (it ships the macOS 27 SDK and `actool`, which compiles the icon).
+- To build: Xcode 27, for the macOS 27 SDK. The compiled icon ships in the repo; `actool` only rebuilds it if you change `Icon/AppIcon.icon`.
 - Python 3, only for the Claude Code integration.
 
 ## Install

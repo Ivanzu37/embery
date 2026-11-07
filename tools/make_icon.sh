@@ -2,7 +2,7 @@
 # Compiles Icon/AppIcon.icon (an Icon Composer file) with actool and writes:
 #   Resources/Assets.car     the Liquid Glass icon (light, dark, tinted, clear)
 #   Resources/AppIcon.icns   flat fallback for Finder views that read .icns
-# build.sh runs this when the .icon changed. Run it by hand to check errors.
+# empaquetar.sh runs this when the .icon changed and actool is installed. Run it by hand to check errors.
 set -euo pipefail
 here=${0:A:h}
 repo=${here:h}

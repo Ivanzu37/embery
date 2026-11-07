@@ -32,7 +32,7 @@ La interfaz está en español e inglés y sigue el idioma del sistema.
 ## Requisitos
 
 - macOS 27 o posterior. El Hueco necesita un Mac con notch.
-- Para compilar: Xcode 27 (trae el SDK de macOS 27 y `actool`, que compila el icono).
+- Para compilar: Xcode 27, por el SDK de macOS 27. El icono compilado viene en el repo; `actool` solo lo rehace si cambias `Icon/AppIcon.icon`.
 - Python 3, solo para la integración con Claude Code.
 
 ## Instalar
