@@ -98,7 +98,8 @@ def main():
     evento = p.get("hook_event_name")
     if evento in ("SessionStart", "UserPromptSubmit", "PermissionRequest", "Notification"):
         donde(p)
-    esperar = evento == "PermissionRequest"
+    # las propias de Hesia deciden sus permisos por su stream: el hook solo avisa
+    esperar = evento == "PermissionRequest" and not os.environ.get("HESIA_PROPIA")
     if esperar:
         p["embery_wait"] = True
 
