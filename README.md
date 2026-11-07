@@ -81,11 +81,15 @@ swift test
 In Embery's Settings, under "Alerts and permissions", click **Connect…**. Embery adds to `~/.claude/settings.json`:
 
 - `embery-hook` on Claude Code's events, to follow conversations and answer permission requests;
-- `embery-status` as the statusline, if you don't have one already. It's the only way plan limits reach Embery.
+- `embery-status` as the statusline, if you don't have one already. It's how plan limits reach Embery while you work in the terminal.
 
 Connect once the app is in its final place (Applications): the settings point to the app's path. If you move it later, click **Connect…** again and it fixes itself.
 
-Before changing anything it saves a copy to `settings.json.antes-de-embery`, and it only touches its own entries. **Remove** takes them out again. If you already have your own statusline it is left alone: Embery works the same, just without plan limits.
+Before changing anything it saves a copy to `settings.json.before-embery`, and it only touches its own entries. **Remove** takes them out again. If you already have your own statusline it is left alone: Embery works the same, just without plan limits.
+
+If you mostly use Claude desktop, the statusline never runs. Turn on **Ask Claude for usage** (Settings, The Nook): at most every 15 minutes, and only while you're active, Embery sends Haiku a one-word question and reads the limits from the reply. Each one costs a few thousand tokens of your plan.
+
+Another app can listen to the same events: put a link to its Unix socket in `~/Library/Application Support/Embery/forward/` and both scripts send it a copy.
 
 If Embery is closed, both scripts exit without doing anything and Claude Code carries on as usual. If you don't answer a permission request in the Nook within 60 s, the decision goes back to the terminal.
 
@@ -101,6 +105,13 @@ EMBERY_DIR=/tmp/embery-test open build/Embery.app
 
 - Distraction blocking and music controls use AppleScript: macOS will ask for permission the first time.
 - The brightness indicator reads a private system API (DisplayServices) loaded at runtime. If a future macOS removes it, there's no brightness indicator and everything else keeps working.
+
+## Uninstall
+
+1. In Settings, click **Remove** next to Claude Code, so `settings.json` stops pointing at the app.
+2. Turn off **Open at login** if you turned it on.
+3. Quit Embery and move it to the Trash.
+4. To erase your data too, delete `~/Library/Application Support/Embery/`. Notes written to your vault stay there.
 
 ## License
 

@@ -39,9 +39,17 @@ final class TokensTests: XCTestCase {
     func testSidechainAndPartialLine() {
         append(line("S", 50, side: true) + String(line("C", 1).dropLast()))   // la última, sin terminar
         let l = ledger(); l.scanNow()
-        XCTAssertNil(l.days[day])
+        XCTAssertEqual(l.days[day], 160)   // el subagente cuenta; la línea a medias, todavía no
         append("\n"); l.scanNow()
-        XCTAssertEqual(l.days[day], 111)
+        XCTAssertEqual(l.days[day], 160 + 111)
+    }
+
+    func testSubagentsInSubfolders() throws {
+        let sub = dir.appendingPathComponent("proyecto/sesion/subagents")
+        try FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
+        try line("G", 5, side: true).write(to: sub.appendingPathComponent("agent-1.jsonl"), atomically: true, encoding: .utf8)
+        let l = ledger(); l.scanNow()
+        XCTAssertEqual(l.days[day], 115)
     }
 
     func testKeepsDaysOfDeletedConversations() {

@@ -6,7 +6,7 @@ struct BienvenidaVista: View {
     let lumen: Buho
     @State private var notas: String?
     @State private var claude = false
-    @State private var falloClaude = false
+    @State private var falloClaude: String?
 
     private var paso: Int { m.pasoBienvenida }
 
@@ -116,9 +116,9 @@ struct BienvenidaVista: View {
                 if !m.ajustes.boveda.isEmpty { notas = URL(fileURLWithPath: m.ajustes.boveda).lastPathComponent; lumen.tocar() }
             }
             if JornadaTarjeta.detectado {
-                opcion(String(localized: "Claude Code"), falloClaude ? String(localized: "No se pudo leer settings.json: no se ha tocado") : String(localized: "Conversaciones y permisos en el Hueco"),
+                opcion(String(localized: "Claude Code"), falloClaude ?? String(localized: "Conversaciones y permisos en el Hueco"),
                        hecho: claude ? String(localized: "Conectado") : nil, accion: String(localized: "Conectar…")) {
-                    do { try m.conectarClaude(); claude = true; falloClaude = false; lumen.tocar() } catch { falloClaude = true }
+                    do { try m.conectarClaude(); claude = true; falloClaude = nil; lumen.tocar() } catch { falloClaude = InstaladorHook.texto(error) }
                 }
             }
             Spacer(minLength: 8)

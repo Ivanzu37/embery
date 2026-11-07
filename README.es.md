@@ -81,11 +81,15 @@ swift test
 En Ajustes de Embery, «Avisos y permisos» → **Conectar…**. Embery añade a `~/.claude/settings.json`:
 
 - `embery-hook` en los eventos de Claude Code, para seguir las conversaciones y responder permisos;
-- `embery-status` como statusline, si no tienes otra. Es la única vía por la que llegan los límites del plan.
+- `embery-status` como statusline, si no tienes otra. Es la vía por la que llegan los límites del plan mientras trabajas en la terminal.
 
 Conecta con la app ya en su sitio (Aplicaciones): los ajustes apuntan a la ruta de la app. Si luego la mueves, vuelve a pulsar **Conectar…** y se corrige sola.
 
-Antes de tocar nada guarda una copia en `settings.json.antes-de-embery`, y solo cambia sus propias entradas. **Quitar** las retira. Si ya tienes una statusline tuya no se pisa: Embery funciona igual, pero sin los límites del plan.
+Antes de tocar nada guarda una copia en `settings.json.before-embery`, y solo cambia sus propias entradas. **Quitar** las retira. Si ya tienes una statusline tuya no se pisa: Embery funciona igual, pero sin los límites del plan.
+
+Si usas sobre todo Claude desktop, la statusline no corre nunca. Activa **Preguntar el uso a Claude** (Ajustes, El Hueco): como mucho cada 15 minutos, y solo mientras estás activo, Embery le hace a Haiku una pregunta de una palabra y lee los límites de la respuesta. Cada una gasta unos pocos miles de tokens de tu plan.
+
+Otra app puede escuchar los mismos eventos: pon un enlace a su socket Unix en `~/Library/Application Support/Embery/forward/` y los dos scripts le mandan una copia.
 
 Si Embery está cerrada, los dos scripts salen sin hacer nada y Claude Code sigue como siempre. Ante un permiso, si no contestas en el Hueco en 60 s, la decisión vuelve a la terminal.
 
@@ -101,6 +105,13 @@ EMBERY_DIR=/tmp/embery-prueba open build/Embery.app
 
 - El bloqueo de distracciones y el control de música usan AppleScript: macOS pedirá permiso la primera vez.
 - El aviso de brillo lee una API privada del sistema (DisplayServices) que se carga en tiempo de ejecución. Si un macOS futuro la quita, no habrá aviso de brillo y el resto sigue igual.
+
+## Desinstalar
+
+1. En Ajustes, pulsa **Quitar** junto a Claude Code, para que `settings.json` deje de apuntar a la app.
+2. Apaga **Abrir al iniciar sesión** si lo activaste.
+3. Cierra Embery y llévala a la Papelera.
+4. Para borrar también tus datos, elimina `~/Library/Application Support/Embery/`. Las notas escritas en tu bóveda se quedan.
 
 ## Licencia
 

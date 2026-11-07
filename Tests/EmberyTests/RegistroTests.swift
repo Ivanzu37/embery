@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import Embery
 
 @Test func ocupaElGuionVacioDeLaPlantilla() {
@@ -21,4 +22,18 @@ import Testing
     #expect(webBloqueada("https://www.instagram.com/reels", lista) != nil)
     #expect(webBloqueada("https://m.instagram.com", lista) != nil)
     #expect(webBloqueada("https://notinstagram.com", lista) == nil)
+}
+
+@Test func reescribirNoTocaLoQueNoLee() throws {
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("embery-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let rota = dir.appendingPathComponent("rota.md"), bytes = Data([0xFF, 0xFE, 0x00, 0xD8])
+    try bytes.write(to: rota)
+    #expect(!Boveda.reescribir(rota) { $0 + "x" })
+    #expect(try Data(contentsOf: rota) == bytes)
+    let buena = dir.appendingPathComponent("buena.md")
+    try "a".write(to: buena, atomically: true, encoding: .utf8)
+    #expect(Boveda.reescribir(buena) { $0 + "b" })
+    #expect(try String(contentsOf: buena, encoding: .utf8) == "ab")
 }

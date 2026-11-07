@@ -4,7 +4,7 @@ import Testing
 
 private func apunte(_ modo: Modo, segundos: Double, hace: Double, appID: String? = nil) -> Sesion {
     let fin = Date().addingTimeInterval(-hace)
-    return Sesion(inicio: fin.addingTimeInterval(-segundos), fin: fin, modo: modo, segundos: segundos, pausas: 1, tarea: "Hesia",
+    return Sesion(inicio: fin.addingTimeInterval(-segundos), fin: fin, modo: modo, segundos: segundos, pausas: 1, tarea: "Informe",
                   app: appID == nil ? nil : "Editor", appID: appID, bloqueos: 2, proyecto: "embery")
 }
 
@@ -17,7 +17,7 @@ private func apunte(_ modo: Modo, segundos: Double, hace: Double, appID: String?
     let s = apunte(.cronometro, segundos: 1800, hace: 10)
     let f = try #require(Embery.foco(retomando: s, Ajustes(), app: nil))
     #expect(f.id == s.id && f.inicio == s.inicio && f.segundos == 1800)
-    #expect(f.pausas == 1 && f.bloqueos == 2 && f.tarea == "Hesia" && f.proyecto?.nombre == "embery")
+    #expect(f.pausas == 1 && f.bloqueos == 2 && f.tarea == "Informe" && f.proyecto?.nombre == "embery")
 }
 
 // 50 min por ronda y 2 rondas de serie: con 70 min hechos va por la segunda; con 200, no pasa de la última.

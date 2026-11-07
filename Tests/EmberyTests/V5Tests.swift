@@ -144,7 +144,7 @@ private func temporal(_ nombre: String) throws -> URL {
     try InstaladorHook.quitar(en: url)
     o = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
     #expect((o["statusLine"] as? [String: Any])?["command"] as? String == "mia")
-    #expect(FileManager.default.fileExists(atPath: url.path + ".antes-de-embery"))
+    #expect(FileManager.default.fileExists(atPath: url.path + ".before-embery"))
     try Data("no es json".utf8).write(to: url)
     #expect(throws: InstaladorHook.Fallo.self) { try InstaladorHook.instalar(en: url, comando: cmd) }
 }
@@ -160,8 +160,6 @@ private func temporal(_ nombre: String) throws -> URL {
         let id = UUID().uuidString
         let p = Process(), entrada = Pipe(), salida = Pipe()
         p.executableURL = hook; p.arguments = [sock]
-        // el hook reenvía también a Hesia: sin esto, cada pasada deja permisos falsos en la cripta
-        p.environment = ProcessInfo.processInfo.environment.merging(["HESIA_SOCKET": sock + ".sin-hesia"]) { _, n in n }
         p.standardInput = entrada; p.standardOutput = salida
         try p.run()
         let todo = ["Bash", "TodoWrite"][Int.random(in: 0...1)]

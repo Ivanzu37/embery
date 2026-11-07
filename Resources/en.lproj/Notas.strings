@@ -1,0 +1,16 @@
+/* Lo que Embery escribe en la bóveda. */
+"foco %lld min" = "focus %lld min";
+"Registro" = "Log";
+"Relacionado" = "Related";
+"temporizador" = "timer";
+"cronómetro" = "stopwatch";
+"modo App" = "App mode";
+" en %@" = " in %@";
+"1 pausa" = "1 pause";
+"%lld pausas" = "%lld pauses";
+"1 distracción bloqueada" = "1 distraction blocked";
+"%lld distracciones bloqueadas" = "%lld distractions blocked";
+"%lld min de foco en «%@»" = "%lld min of focus on “%@”";
+", con %@." = ", with %@.";
+"foco" = "focus";
+"Foco" = "Focus";

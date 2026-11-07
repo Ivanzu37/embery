@@ -88,16 +88,27 @@ enum Boveda {
 
     @discardableResult
     static func marcar(_ c: Casilla, _ hecha: Bool, _ a: Ajustes, _ d: Date = Date()) -> Bool {
-        guard disponible(a.boveda), let u = diaria(a, d), let t = try? String(contentsOf: u, encoding: .utf8),
-              let nuevo = marcar(c, hecha, en: t) else { return false }
-        return (try? nuevo.write(to: u, atomically: true, encoding: .utf8)) != nil
+        guard disponible(a.boveda), let u = diaria(a, d) else { return false }
+        return reescribir(u) { marcar(c, hecha, en: $0) }
     }
 
     @discardableResult
     static func anadir(_ tarea: String, _ a: Ajustes, _ d: Date = Date()) -> Bool {
         let t = tarea.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !t.isEmpty, disponible(a.boveda), let u = diaria(a, d), let texto = try? String(contentsOf: u, encoding: .utf8) else { return false }
-        return (try? anadir(t, en: texto).write(to: u, atomically: true, encoding: .utf8)) != nil
+        guard !t.isEmpty, disponible(a.boveda), let u = diaria(a, d) else { return false }
+        return reescribir(u) { anadir(t, en: $0) }
+    }
+
+    // Lee, cambia y escribe una nota que ya existe. Si cambió mientras tanto (Obsidian guardando), lo intenta otra vez
+    // con lo nuevo; si no se puede leer, no se toca. false: no se escribió.
+    static func reescribir(_ u: URL, _ cambio: (String) -> String?) -> Bool {
+        let fecha = { (try? u.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate }
+        for _ in 0..<3 {
+            guard let antes = fecha(), let texto = try? String(contentsOf: u, encoding: .utf8), let nuevo = cambio(texto) else { return false }
+            guard fecha() == antes else { continue }
+            return (try? nuevo.write(to: u, atomically: true, encoding: .utf8)) != nil
+        }
+        return false
     }
 
     // MARK: notas recientes

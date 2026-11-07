@@ -29,9 +29,13 @@ except Exception:
 
 msg = {k: p.get(k) for k in ("session_id", "transcript_path", "cwd", "model", "context_window", "rate_limits", "workspace")}
 msg["hook_event_name"] = "StatusLine"
-# también a Hesia (la cripta), si está abierta
-otra = os.path.expanduser(os.environ.get("HESIA_SOCKET", "~/Library/Application Support/Hesia/hesia.sock"))
-for r in [ruta()] + ([otra] if os.path.exists(otra) else []):
+# también a las apps con socket en la carpeta forward/ junto al de Embery (ver embery-hook)
+carpeta = os.path.join(os.path.dirname(ruta()), "forward")
+try:
+    otras = [os.path.join(carpeta, f) for f in sorted(os.listdir(carpeta))]
+except OSError:
+    otras = []
+for r in [ruta()] + [o for o in otras if os.path.exists(o)]:
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(0.2)

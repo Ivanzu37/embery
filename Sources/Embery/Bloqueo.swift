@@ -1,21 +1,16 @@
 import AppKit
 
-// Bloqueo durante el foco: las apps de la lista se ocultan al activarse; las webs se cierran en Chrome y Safari.
+// Bloqueo durante el foco: las apps de la lista se ocultan al activarse; las webs se cierran en Chrome, Brave, Edge y Safari.
 
 enum Navegador: String, CaseIterable {
-    case chrome = "com.google.Chrome", safari = "com.apple.Safari"
-    var leer: String {
-        switch self {
-        case .chrome: "tell application \"Google Chrome\" to if (count of windows) > 0 then get URL of active tab of front window"
-        case .safari: "tell application \"Safari\" to if (count of windows) > 0 then get URL of current tab of front window"
-        }
+    case chrome = "com.google.Chrome", safari = "com.apple.Safari", brave = "com.brave.Browser", edge = "com.microsoft.edgemac"
+    private var nombre: String {
+        switch self { case .chrome: "Google Chrome"; case .safari: "Safari"; case .brave: "Brave Browser"; case .edge: "Microsoft Edge" }
     }
-    var cerrar: String {
-        switch self {
-        case .chrome: "tell application \"Google Chrome\" to close active tab of front window"
-        case .safari: "tell application \"Safari\" to close current tab of front window"
-        }
-    }
+    // Chrome, Brave y Edge comparten el diccionario de Chromium; Safari llama «current tab» a la pestaña.
+    private var pestana: String { self == .safari ? "current tab" : "active tab" }
+    var leer: String { "tell application \"\(nombre)\" to if (count of windows) > 0 then get URL of \(pestana) of front window" }
+    var cerrar: String { "tell application \"\(nombre)\" to close \(pestana) of front window" }
 }
 
 // «www.instagram.com» y «m.instagram.com» cuentan como «instagram.com»; «notinstagram.com» no.

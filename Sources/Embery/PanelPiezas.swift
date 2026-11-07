@@ -339,9 +339,9 @@ struct IntegracionesVista: View {
                     Fila(titulo: String(localized: "Avisos y permisos"), sub: falloHook ?? (hook == true ? conectado : String(localized: "Añade embery-hook a los ajustes de Claude Code"))) {
                         enlace(hook == true ? String(localized: "Quitar") : String(localized: "Conectar…")) {
                             do {
-                                if hook == true { try InstaladorHook.quitar(en: url) } else { try InstaladorHook.instalar(en: url, comando: cmd, linea: linea) }
+                                if hook == true { try InstaladorHook.quitar(en: url) } else { try InstaladorHook.conectar(en: url, comando: cmd, linea: linea) }
                                 falloHook = nil
-                            } catch { falloHook = String(localized: "No se pudo leer settings.json: no se ha tocado") }
+                            } catch { falloHook = InstaladorHook.texto(error) }
                             hook = InstaladorHook.instalado(en: url, comando: cmd)
                         }
                     }
@@ -446,7 +446,7 @@ extension Embery {
     // Añade embery-hook (y la statusline si no hay otra) a los ajustes de Claude Code.
     func conectarClaude() throws {
         guard let ruta = InstaladorHook.rutaHook else { throw CocoaError(.fileNoSuchFile) }
-        try InstaladorHook.instalar(en: InstaladorHook.ajustesClaude, comando: InstaladorHook.comando(hook: ruta),
+        try InstaladorHook.conectar(en: InstaladorHook.ajustesClaude, comando: InstaladorHook.comando(hook: ruta),
                                     linea: InstaladorHook.rutaEstado.map { InstaladorHook.comando(hook: $0) })
     }
 }

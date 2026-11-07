@@ -12,7 +12,7 @@ enum Registro {
     static func nombreNota(_ s: Sesion) -> String { "\(fecha(s.inicio, "yyyy-MM-dd-HHmm"))-foco" }
 
     static func linea(_ s: Sesion, enlace: String?) -> String {
-        var l = "- \(fecha(s.inicio, "HH:mm"))–\(fecha(s.fin, "HH:mm")) · foco \(s.minutos) min"
+        var l = "- \(fecha(s.inicio, "HH:mm"))–\(fecha(s.fin, "HH:mm")) · " + String(localized: "foco \(s.minutos) min", table: "Notas")
         if let p = s.proyecto { l += " · \(p)" }
         l += " · ✦ \(s.destellos)"
         if let n = s.nota { l += " · \(n)" }
@@ -23,9 +23,10 @@ enum Registro {
     // Mete la línea en la sección Registro: ocupa el «- » vacío de la plantilla o va detrás de la última línea con texto.
     static func insertar(_ linea: String, en texto: String) -> String {
         var lineas = texto.components(separatedBy: "\n")
-        guard let cab = lineas.firstIndex(where: { $0.hasPrefix("## ") && $0.contains("Registro") }) else {
-            let antes = lineas.firstIndex { $0.hasPrefix("## ") && $0.contains("Relacionado") } ?? lineas.count
-            lineas.insert(contentsOf: ["## 📓 Registro", linea, ""], at: antes)
+        let seccion = String(localized: "Registro", table: "Notas"), relacionado = String(localized: "Relacionado", table: "Notas")
+        guard let cab = lineas.firstIndex(where: { $0.hasPrefix("## ") && $0.contains(seccion) }) else {
+            let antes = lineas.firstIndex { $0.hasPrefix("## ") && $0.contains(relacionado) } ?? lineas.count
+            lineas.insert(contentsOf: ["## 📓 \(seccion)", linea, ""], at: antes)
             return lineas.joined(separator: "\n")
         }
         let fin = lineas[(cab + 1)...].firstIndex { $0.hasPrefix("## ") } ?? lineas.count
@@ -39,48 +40,80 @@ enum Registro {
     }
 
     // Una plantilla propia (Integraciones › Obsidian › Plantilla de la nota) con sus huecos {{…}}.
+    // En el frontmatter el texto va entre comillas de YAML y una línea «clave: {{hueco}}» vacía desaparece;
+    // en el cuerpo, una línea que solo era un hueco vacío también.
     static func nota(_ s: Sesion, plantilla: String) -> String {
         let huecos = ["fecha": fecha(s.inicio, "yyyy-MM-dd"), "inicio": fecha(s.inicio, "HH:mm"), "fin": fecha(s.fin, "HH:mm"),
-                      "minutos": "\(s.minutos)", "tarea": s.tarea, "proyecto": s.proyecto ?? "", "nota": s.nota ?? "", "destellos": "\(s.destellos)"]
-        return huecos.reduce(plantilla) { $0.replacingOccurrences(of: "{{\($1.key)}}", with: $1.value) }
+                      "minutos": "\(s.minutos)", "tarea": s.tarea, "proyecto": s.proyecto ?? "", "nota": s.nota ?? "",
+                      "destellos": "\(s.destellos)", "modo": s.modo.rawValue, "pausas": "\(s.pausas)", "bloqueos": "\(s.bloqueos)",
+                      "app": s.app ?? "", "resumen": resumen(s)]
+        let texto = ["tarea", "proyecto", "nota", "app", "resumen"]
+        var lineas = plantilla.components(separatedBy: "\n"), enFM = lineas.first == "---"
+        for i in lineas.indices {
+            if i > 0, lineas[i] == "---" { enFM = false; continue }
+            let original = lineas[i]
+            for (k, v) in huecos {
+                if enFM, texto.contains(k) {
+                    lineas[i] = lineas[i].replacingOccurrences(of: "\"{{\(k)}}\"", with: "{{\(k)}}")
+                        .replacingOccurrences(of: "{{\(k)}}", with: v.isEmpty ? "" : yaml(v))
+                } else {
+                    lineas[i] = lineas[i].replacingOccurrences(of: "{{\(k)}}", with: v)
+                }
+            }
+            let quitada = lineas[i] != original && lineas[i].trimmingCharacters(in: .whitespaces).isEmpty
+            let claveVacia = enFM && original.contains("{{") && lineas[i].trimmingCharacters(in: .whitespaces).hasSuffix(":")
+            if quitada || claveVacia { lineas[i] = "\u{0}" }
+        }
+        return lineas.filter { $0 != "\u{0}" }.joined(separator: "\n")
     }
-
     // Comillas de YAML: el texto de «qué has hecho» puede traer dos puntos o almohadillas.
     static func yaml(_ t: String) -> String { "\"" + t.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
 
-    static func nota(_ s: Sesion) -> String {
-        let dia = fecha(s.inicio, "yyyy-MM-dd")
-        var fm = """
-        ---
-        tags: [nota, tema/foco]
-        created: \(dia)
-        inicio: \(fecha(s.inicio, "yyyy-MM-dd'T'HH:mm"))
-        fin: \(fecha(s.fin, "yyyy-MM-dd'T'HH:mm"))
-        modo: \(s.modo.rawValue)
-        minutos: \(s.minutos)
-        pausas: \(s.pausas)
-        destellos: \(s.destellos)
-        tarea: \(s.tarea)
-        """
-        if let app = s.app { fm += "\napp: \(app)" }
-        if let p = s.proyecto { fm += "\nproyecto: \(yaml(p))" }
-        if let n = s.nota { fm += "\nnota: \(yaml(n))" }
-        fm += "\nbloqueos: \(s.bloqueos)\n---\n"
-        let modo = ["temporizador": "temporizador", "cronometro": "cronómetro", "app": "modo App"][s.modo.rawValue]!
-        let donde = s.app.map { " en \($0)" } ?? ""
-        let pausas = s.pausas == 1 ? "1 pausa" : "\(s.pausas) pausas"
-        let bloqueos = s.bloqueos == 1 ? "1 distracción bloqueada" : "\(s.bloqueos) distracciones bloqueadas"
-        return fm + """
-        # Foco \(fecha(s.inicio, "yyyy-MM-dd HH:mm"))
-
-        \(s.nota.map { "\($0)\n\n" } ?? "")\(s.minutos) min de foco en «\(s.tarea)»\(donde), con \(modo). \(pausas), \(bloqueos), ✦ \(s.destellos).
-
-        ## 🔗 Relacionado
-        - [[\(dia)]]
-        - [[embery]]
-
-        """
+    // «50 min de foco en «Programación» en Xcode, con temporizador. 1 pausa, 2 distracciones bloqueadas, ✦ 50.»
+    static func resumen(_ s: Sesion) -> String {
+        let modo = switch s.modo {
+            case .temporizador: String(localized: "temporizador", table: "Notas")
+            case .cronometro: String(localized: "cronómetro", table: "Notas")
+            case .app: String(localized: "modo App", table: "Notas")
+        }
+        let donde = s.app.map { String(localized: " en \($0)", table: "Notas") } ?? ""
+        let pausas = s.pausas == 1 ? String(localized: "1 pausa", table: "Notas") : String(localized: "\(s.pausas) pausas", table: "Notas")
+        let bloqueos = s.bloqueos == 1 ? String(localized: "1 distracción bloqueada", table: "Notas")
+            : String(localized: "\(s.bloqueos) distracciones bloqueadas", table: "Notas")
+        return String(localized: "\(s.minutos) min de foco en «\(s.tarea)»", table: "Notas") + donde
+            + String(localized: ", con \(modo).", table: "Notas") + " \(pausas), \(bloqueos), ✦ \(s.destellos)."
     }
+
+    // La nota de serie, neutra: quien quiera la suya la hace con la plantilla y estos mismos huecos.
+    static let plantillaDeSerie: String = {
+        let foco = String(localized: "foco", table: "Notas"), titulo = String(localized: "Foco", table: "Notas")
+        return """
+        ---
+        tags: [\(foco)]
+        created: {{fecha}}
+        start: {{fecha}}T{{inicio}}
+        end: {{fecha}}T{{fin}}
+        mode: {{modo}}
+        minutes: {{minutos}}
+        pauses: {{pausas}}
+        sparks: {{destellos}}
+        task: {{tarea}}
+        app: {{app}}
+        project: {{proyecto}}
+        note: {{nota}}
+        blocked: {{bloqueos}}
+        ---
+        # \(titulo) {{fecha}} {{inicio}}
+
+        {{nota}}
+
+        {{resumen}}
+
+        ## 🔗 \(String(localized: "Relacionado", table: "Notas"))
+        - [[{{fecha}}]]
+        """
+    }()
+    static func nota(_ s: Sesion) -> String { nota(s, plantilla: plantillaDeSerie) }
 
     // Devuelve false si la bóveda no está (disco sin montar): la sesión queda pendiente y se reintenta más tarde.
     static func escribir(_ s: Sesion, _ a: Ajustes) -> Bool {
@@ -101,12 +134,14 @@ enum Registro {
             if a.lineaDiaria {
                 let dia = fecha(s.inicio, "yyyy-MM-dd"), url = diaria
                 try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-                var texto: String
-                if let t = try? String(contentsOf: url, encoding: .utf8) { texto = t }
-                else if let plantilla = try? String(contentsOf: raiz.appendingPathComponent("templates/daily-note.md"), encoding: .utf8) {
+                let l = linea(s, enlace: enlace)
+                // Si la nota existe, solo se toca si se ha podido leer: nunca se rehace desde la plantilla encima.
+                if fm.fileExists(atPath: url.path) { return Boveda.reescribir(url) { insertar(l, en: $0) } }
+                let texto: String
+                if let plantilla = try? String(contentsOf: raiz.appendingPathComponent("templates/daily-note.md"), encoding: .utf8) {
                     texto = plantilla.replacingOccurrences(of: "{{date}}", with: dia)
-                } else { texto = "---\ntags: [daily]\ncreated: \(dia)\n---\n# \(dia)\n\n## 📓 Registro\n- \n" }
-                try insertar(linea(s, enlace: enlace), en: texto).write(to: url, atomically: true, encoding: .utf8)
+                } else { texto = "---\ntags: [daily]\ncreated: \(dia)\n---\n# \(dia)\n\n## 📓 \(String(localized: "Registro", table: "Notas"))\n- \n" }
+                try Data(insertar(l, en: texto).utf8).write(to: url, options: .withoutOverwriting)   // si apareció justo ahora, se reintenta luego
             }
             return true
         } catch {

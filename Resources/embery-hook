@@ -25,10 +25,15 @@ def ruta():
     return os.path.expanduser(os.environ.get("EMBERY_SOCKET", "~/Library/Application Support/Embery/embery.sock"))
 
 
-# Un solo hook para las apps que escuchan: Embery y, si está abierta, Hesia (la cripta).
+# Un solo hook para varias apps: cualquier socket (o enlace a uno) en la carpeta forward/ junto al de Embery
+# recibe los mismos eventos. Los que no existen ahora mismo (app cerrada) se saltan.
 def rutas():
-    otra = os.path.expanduser(os.environ.get("HESIA_SOCKET", "~/Library/Application Support/Hesia/hesia.sock"))
-    return [ruta()] + ([otra] if os.path.exists(otra) else [])
+    carpeta = os.path.join(os.path.dirname(ruta()), "forward")
+    try:
+        otras = [os.path.join(carpeta, f) for f in sorted(os.listdir(carpeta))]
+    except OSError:
+        otras = []
+    return [ruta()] + [r for r in otras if os.path.exists(r)]
 
 
 # Permiso: espera a todas a la vez y gana la primera que decide; las que cuelgan sin decidir no cuentan.
@@ -76,7 +81,7 @@ def donde(p):
             p["where"]["tty"] = "/dev/" + tty
     except Exception:
         pass
-    p["where"]["pid"] = str(os.getppid())   # Hesia sube desde aquí hasta el proceso claude (cpu real)
+    p["where"]["pid"] = str(os.getppid())   # desde aquí se llega al proceso claude (su cpu real)
 
 
 def main():
@@ -121,7 +126,7 @@ def main():
     if reglas:
         decision["updatedPermissions"] = reglas
     if comportamiento == "deny":
-        decision["message"] = r.get("message") or "Denegado desde Embery."
+        decision["message"] = r.get("message") or "Denied from Embery."
     sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PermissionRequest", "decision": decision}}))
 
 

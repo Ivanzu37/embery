@@ -64,10 +64,11 @@ final class TokenLedger {
         let fm = FileManager.default
         // Sin la carpeta (otro HOME, disco sin permiso) no se archiva nada: al volver se contaría todo dos veces.
         guard let dirs = try? fm.contentsOfDirectory(atPath: root) else { return false }
+        // También las de los subagentes, que Claude Code guarda en subcarpetas de cada conversación.
         var paths: [String] = []
         for dir in dirs {
             let p = root + "/" + dir
-            for f in (try? fm.contentsOfDirectory(atPath: p)) ?? [] where f.hasSuffix(".jsonl") { paths.append(p + "/" + f) }
+            for f in (fm.enumerator(atPath: p)?.allObjects as? [String]) ?? [] where f.hasSuffix(".jsonl") { paths.append(p + "/" + f) }
         }
         var changed = false
         let present = Set(paths)
@@ -100,7 +101,7 @@ final class TokenLedger {
     static func read(_ data: Data.SubSequence, into f: inout FileState) {
         for line in data.split(separator: 0x0A) where line.range(of: usageKey) != nil {
             guard let o = try? JSONSerialization.jsonObject(with: line) as? [String: Any],
-                  o["type"] as? String == "assistant", o["isSidechain"] as? Bool != true,
+                  o["type"] as? String == "assistant",   // los subagentes (isSidechain) también gastan
                   let m = o["message"] as? [String: Any], let u = m["usage"] as? [String: Any],
                   let ts = o["timestamp"] as? String, let date = iso.date(from: ts) ?? isoPlain.date(from: ts) else { continue }
             let n = ["input_tokens", "cache_creation_input_tokens", "output_tokens"].reduce(0) { $0 + ((u[$1] as? NSNumber)?.intValue ?? 0) }

@@ -31,9 +31,17 @@ private func sesion(_ proyecto: String?, min: Double, nota: String? = nil, fin: 
 @Test func notaDeSesionConLineaYPlantilla() {
     let s = sesion("web", min: 25, nota: #"Arreglé "algo": hecho"#)
     let n = Registro.nota(s)
-    #expect(n.contains(#"nota: "Arreglé \"algo\": hecho""#))
-    #expect(n.contains("proyecto: \"web\""))
+    #expect(n.contains(#"note: "Arreglé \"algo\": hecho""#))
+    #expect(n.contains("project: \"web\""))
+    #expect(!n.contains("app:"))   // sin app, la línea desaparece
     #expect(n.contains("\n\nArreglé \"algo\": hecho\n\n25 min de foco"))
     let p = Registro.nota(s, plantilla: "# {{tarea}} · {{proyecto}}\n{{minutos}} min, ✦ {{destellos}}: {{nota}} {{nada}}")
     #expect(p == #"# Programación · web"# + "\n25 min, ✦ 25: " + #"Arreglé "algo": hecho {{nada}}"#)
+}
+
+@Test func plantillaConFrontmatterEntreComillas() {
+    var s = sesion(nil, min: 30)
+    s.tarea = "Bug: login #42"
+    let p = Registro.nota(s, plantilla: "---\ntarea: {{tarea}}\notra: \"{{tarea}}\"\nproyecto: {{proyecto}}\n---\n# {{tarea}}\n{{nota}}\nfin")
+    #expect(p == "---\ntarea: \"Bug: login #42\"\notra: \"Bug: login #42\"\n---\n# Bug: login #42\nfin")
 }

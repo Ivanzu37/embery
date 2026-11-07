@@ -16,7 +16,17 @@ enum InstaladorHook {
     static func comando(hook: String, socket: String = SOCKET_PATH) -> String { "\(citar(hook)) \(citar(socket))" }
     private static func citar(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
 
-    enum Fallo: Error { case ilegible }
+    enum Fallo: Error { case ilegible, sinMover }
+    // Abierta desde el DMG o desde Descargas sin mover, macOS la ejecuta desde una copia temporal (translocada):
+    // un hook que apunte ahí deja de existir y Claude Code daría error en cada evento.
+    static var sinMover: Bool {
+        let p = Bundle.main.bundlePath
+        return p.contains("/AppTranslocation/") || p.hasPrefix("/Volumes/") || !p.hasSuffix(".app")
+    }
+    static func texto(_ e: Error) -> String {
+        (e as? Fallo) == .sinMover ? String(localized: "Mueve Embery a Aplicaciones y ábrela desde allí para conectar")
+            : String(localized: "No se pudo leer settings.json: no se ha tocado")
+    }
 
     private static func leer(_ url: URL) throws -> [String: Any] {
         guard let d = try? Data(contentsOf: url), !d.isEmpty else { return [:] }
@@ -28,7 +38,7 @@ enum InstaladorHook {
     private static func escribir(_ o: [String: Any], _ url: URL) throws {
         let fm = FileManager.default
         try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let respaldo = url.appendingPathExtension("antes-de-embery")
+        let respaldo = url.appendingPathExtension("before-embery")
         if fm.fileExists(atPath: url.path), !fm.fileExists(atPath: respaldo.path) { try fm.copyItem(at: url, to: respaldo) }
         try JSONSerialization.data(withJSONObject: o, options: [.prettyPrinted, .withoutEscapingSlashes]).write(to: url, options: .atomic)
     }
@@ -50,6 +60,12 @@ enum InstaladorHook {
     static func instalado(en url: URL, comando cmd: String) -> Bool {
         guard let h = (try? leer(url))?["hooks"] as? [String: Any] else { return false }
         return eventos.allSatisfy { ((h[$0] as? [Any]) ?? []).contains { usa($0, cmd) } }
+    }
+
+    // Lo que hacen los botones: instalar, pero nunca desde una copia que va a desaparecer.
+    static func conectar(en url: URL, comando cmd: String, linea: String?) throws {
+        if sinMover { throw Fallo.sinMover }
+        try instalar(en: url, comando: cmd, linea: linea)
     }
 
     static func instalar(en url: URL, comando cmd: String, linea: String? = nil) throws {

@@ -31,7 +31,7 @@ struct Compra: Codable { var articulo: String; var fecha: Date }
 
 struct Ajustes: Codable {
     var lado = "der"
-    var abrirAlIniciar = true
+    var abrirAlIniciar = false   // se enciende en Ajustes; antes se activaba solo en el primer arranque
     var espirituEscritorio = true
     var seguirHora = true
     var objetivoMin = 180
