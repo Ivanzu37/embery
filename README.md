@@ -60,7 +60,11 @@ With Xcode 27 installed, one command builds it on your Mac and puts it in Applic
 curl -fsSL https://raw.githubusercontent.com/Ivanzu37/embery/main/install.sh | zsh
 ```
 
-From a clone of the repo, `./install.sh` does the same. To update, run the command again: it quits the running copy and replaces it.
+From a clone of the repo, `./install.sh` does the same.
+
+### Updates
+
+From 0.2 on, Embery updates itself: **Settings › General › Check for Updates…**, or the same item in the ✦ menu. It also checks once a week on its own, without interrupting you (you can turn that off right there). Each update is signed, and Embery won't install one that isn't. Coming from 0.1, install 0.2 by hand once.
 
 ## Development
 

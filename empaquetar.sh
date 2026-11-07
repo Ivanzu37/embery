@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Compila en release y monta build/Embery.app con firma local (uso propio, sin App Store).
+# Compila en release y monta build/Embery.app firmada (sin App Store ni notarizar).
 set -e
 cd "${0:A:h}"
 swift build -c release
@@ -19,5 +19,11 @@ if xcrun -f actool >/dev/null 2>&1 && [[ ! -f $car || -n "$(find Icon/AppIcon.ic
   tools/make_icon.sh || echo "aviso: no se pudo recompilar el icono; se usa el que viene en el repo"
 fi
 [[ -f $car ]] && cp -X $car Resources/AppIcon.icns $app/Contents/Resources/
-codesign --force --sign - $app
+# Sparkle llega ya firmado por sus autores; ditto conserva esa firma.
+mkdir -p $app/Contents/Frameworks
+ditto "$(swift build -c release --show-bin-path)/Sparkle.framework" $app/Contents/Frameworks/Sparkle.framework
+# Con el certificado «Embery Code Signing» en el llavero la identidad no cambia entre versiones y macOS conserva
+# los permisos tras actualizar; sin él (quien compila en su Mac) firma local.
+firma=${EMBERY_FIRMA:-$(security find-identity -p codesigning | grep -q '"Embery Code Signing"' && echo "Embery Code Signing" || echo -)}
+codesign --force --sign "$firma" $app
 echo "$app"

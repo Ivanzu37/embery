@@ -85,6 +85,7 @@ final class Delegado: NSObject, NSApplicationDelegate {
         // El Hueco siempre está (se esconde en Ajustes); la parte de Claude Code se apaga en Ajustes y cuenta tras reabrir.
         // El ajuste viene encendido de serie, pero el sistema no lo sabe hasta que se registra.
         if m.ajustes.abrirAlIniciar, Bundle.main.bundlePath.hasSuffix(".app"), SMAppService.mainApp.status != .enabled { m.abrirAlIniciar(true) }
+        _ = Actualizar.shared   // arranca la búsqueda programada
         Pantallas.elegida = m.ajustes.pantalla
         let h = Hueco(boveda: m.ajustes.boveda, claude: (m.ajustes.claudeCode ?? true) && (m.ajustes.conversacionesHueco ?? true)); h.arrancar(); hueco = h; huecoVentana = HuecoVentana(h, m)
         h.verFoco = { [weak self] in self?.hueco?.abierto = false; self?.plegar(false) }
@@ -111,6 +112,7 @@ final class Delegado: NSObject, NSApplicationDelegate {
         estado.button?.title = "✦"
         let menu = NSMenu()
         menu.addItem(withTitle: String(localized: "Abrir Embery"), action: #selector(abrir), keyEquivalent: "").target = self
+        menu.addItem(withTitle: String(localized: "Buscar actualizaciones…"), action: #selector(buscarActualizaciones), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Salir", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         estado.menu = menu
@@ -175,6 +177,7 @@ final class Delegado: NSObject, NSApplicationDelegate {
     var lumenes: [Mascota] { [lumenFoco, lumenHogar, espiritu] }
 
     @objc func abrir() { plegar(false) }
+    @objc func buscarActualizaciones() { Actualizar.shared.buscar() }
 
     // Apagar o salir con un foco en marcha: se cierra como sesión terminada para que no se pierda.
     func applicationWillTerminate(_ n: Notification) { m.terminar() }

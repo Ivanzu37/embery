@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Embery</title>
+        <item>
+            <title>0.2</title>
+            <pubDate>Sat, 07 Nov 2026 21:55:48 +0100</pubDate>
+            <link>https://github.com/Ivanzu37/embery</link>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>27.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/Ivanzu37/embery/releases/download/v0.2/Embery-0.2.dmg" length="4616192" type="application/octet-stream" sparkle:edSignature="EHbj7S+rGqltZNT9sCWuVxsxCnQquG0ejRavc0fYv7wwRY8waWt8E+C8l1lNLYf03KBVsMxI2iRYEtvvq+iYBg=="/>
+        </item>
+    </channel>
+</rss>

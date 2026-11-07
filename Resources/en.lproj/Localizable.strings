@@ -475,3 +475,7 @@
 "permiso" = "permission";
 "daily-notes/{fecha}.md" = "daily-notes/{date}.md";
 "Mueve Embery a Aplicaciones y ábrela desde allí para conectar" = "Move Embery to Applications and open it from there to connect";
+"Buscar actualizaciones…" = "Check for Updates…";
+"Versión %@" = "Version %@";
+"Buscar actualizaciones sola" = "Check for updates automatically";
+"Una vez por semana, sin interrumpir" = "Once a week, without interrupting";

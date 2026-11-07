@@ -60,7 +60,11 @@ Con Xcode 27 instalado, un solo comando la compila en tu Mac y la deja en Aplica
 curl -fsSL https://raw.githubusercontent.com/Ivanzu37/embery/main/install.sh | zsh
 ```
 
-Desde un clon del repo vale `./install.sh`. Para actualizar, repite el comando: cierra la versión abierta y la sustituye.
+Desde un clon del repo vale `./install.sh`.
+
+### Actualizaciones
+
+Desde la 0.2, Embery se actualiza sola: **Ajustes › General › Buscar actualizaciones…**, o lo mismo en el menú ✦. También busca una vez por semana por su cuenta, sin interrumpir (se apaga ahí mismo). Cada actualización va firmada y Embery no instala ninguna que no lo esté. Si vienes de la 0.1, instala la 0.2 a mano una vez.
 
 ## Compilar para desarrollar
 

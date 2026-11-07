@@ -511,6 +511,7 @@ struct EstadisticasVista: View {
 struct AjustesVista: View {
     @Bindable var m: Embery
     @State private var web = ""
+    private let act = Actualizar.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -533,6 +534,13 @@ struct AjustesVista: View {
                     }.menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
                 }
                 Fila(titulo: String(localized: "Abrir al iniciar sesión")) { Interruptor(on: Binding(get: { m.ajustes.abrirAlIniciar }, set: { m.abrirAlIniciar($0) })) }
+                Fila(titulo: String(localized: "Versión \(act.version)")) {
+                    Button(String(localized: "Buscar actualizaciones…"), action: act.buscar).buttonStyle(.plain).foregroundStyle(Color.luz)
+                        .font(.system(size: 12.5, weight: .medium)).disabled(!act.puedeBuscar)
+                }
+                Fila(titulo: String(localized: "Buscar actualizaciones sola"), sub: String(localized: "Una vez por semana, sin interrumpir")) {
+                    Interruptor(on: Binding(get: { act.sola }, set: { act.sola = $0 }))
+                }
             }
             grupo(String(localized: "Foco"))
             Filas {

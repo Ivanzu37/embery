@@ -22,9 +22,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1</string>
+	<string>0.2</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>27.0</string>
 	<key>LSUIElement</key>
@@ -35,5 +35,13 @@
 	<string>Embery escucha el audio del sistema solo para dibujar el espectro del Canto mientras lo miras. No graba ni guarda nada.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Embery muestra tu próximo evento en el Hueco («Lo siguiente»). No cambia nada del Calendario.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/Ivanzu37/embery/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>k3xEmXMZrETKzaoL4sR9JaYjHuoCTeTTWtBm2ULNaTk=</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>604800</integer>
 </dict>
 </plist>
