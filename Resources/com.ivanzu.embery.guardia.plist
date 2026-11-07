@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Si Embery cae con un foco en marcha (queda en-curso.json), la vuelve a abrir. Cmd+Q cierra el foco y borra el apunte. -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ivanzu.embery.guardia</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>[ -f "$HOME/Library/Application Support/Embery/en-curso.json" ] &amp;&amp; ! pgrep -x Embery &gt;/dev/null &amp;&amp; open -b com.ivanzu.embery; exit 0</string>
+    </array>
+    <key>StartInterval</key>
+    <integer>15</integer>
+    <key>AssociatedBundleIdentifiers</key>
+    <string>com.ivanzu.embery</string>
+</dict>
+</plist>

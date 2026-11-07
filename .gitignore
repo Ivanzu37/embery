@@ -1,0 +1,10 @@
+.DS_Store
+._*
+.build/
+build/
+graphify-out/
+*.xcodeproj/
+.swiftpm/
+Resources/Assets.car
+Resources/AppIcon.icns
+__pycache__/

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# embery-status: statusline de Claude Code. Pasa a Embery el contexto y los límites del plan (solo llegan
+# por aquí) y pinta una línea corta en la terminal. Si Embery está cerrada, solo pinta.
+# Uso: embery-status [ruta del socket]   (o EMBERY_SOCKET en el entorno)
+import sys, json, os, socket, time
+
+GRAY, RED, RESET = "\033[90m", "\033[31m", "\033[0m"
+
+
+def ruta():
+    if len(sys.argv) > 1 and sys.argv[1]:
+        return os.path.expanduser(sys.argv[1])
+    return os.path.expanduser(os.environ.get("EMBERY_SOCKET", "~/Library/Application Support/Embery/embery.sock"))
+
+
+def left(ts):
+    try:
+        t = float(ts) if not isinstance(ts, str) or ts.replace(".", "").isdigit() else time.mktime(time.strptime(ts[:19], "%Y-%m-%dT%H:%M:%S")) - time.timezone
+    except Exception:
+        return ""
+    s = max(0, int(t - time.time()))
+    return f"{s // 3600}h{(s % 3600) // 60:02d}" if s >= 3600 else f"{s // 60}m"
+
+
+try:
+    p = json.loads(sys.stdin.read() or "{}")
+except Exception:
+    p = {}
+
+msg = {k: p.get(k) for k in ("session_id", "transcript_path", "cwd", "model", "context_window", "rate_limits", "workspace")}
+msg["hook_event_name"] = "StatusLine"
+# también a Hesia (la cripta), si está abierta
+otra = os.path.expanduser(os.environ.get("HESIA_SOCKET", "~/Library/Application Support/Hesia/hesia.sock"))
+for r in [ruta()] + ([otra] if os.path.exists(otra) else []):
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(0.2)
+        s.connect(r)
+        s.sendall((json.dumps(msg) + "\n").encode())
+        s.close()
+    except Exception:
+        pass
+
+parts = []
+m = (p.get("model") or {}).get("display_name") or ""
+if m:
+    parts.append(m.lower())
+ctx = (p.get("context_window") or {}).get("used_percentage")
+if ctx is not None:
+    c = round(ctx)
+    parts.append((RED if c >= 80 else "") + f"ctx {c}%" + (RESET if c >= 80 else ""))
+fh = (p.get("rate_limits") or {}).get("five_hour") or {}
+if fh.get("used_percentage") is not None:
+    u = round(fh["used_percentage"])
+    txt = f"5h {u}%" + (f" · {left(fh.get('resets_at'))}" if fh.get("resets_at") else "")
+    parts.append((RED if u >= 80 else "") + txt + (RESET if u >= 80 else ""))
+print(f"{GRAY}embery{RESET}  " + f"{GRAY} · {RESET}".join(parts))

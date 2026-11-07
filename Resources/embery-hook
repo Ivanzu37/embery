@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+# embery-hook: manda cada evento de Claude Code a Embery por un socket local.
+# En PermissionRequest espera la decisión de Embery y la devuelve a Claude Code; si Embery no
+# está o no contesta, sale sin escribir nada y Claude Code pregunta en su terminal como siempre.
+# Uso: embery-hook [ruta del socket]   (o EMBERY_SOCKET en el entorno)
+import sys, json, os, socket
+
+ESPERA = 60
+COMPLETOS = ("TodoWrite", "TaskCreate", "TaskUpdate")   # el tablón necesita la lista entera
+
+
+def trim(v, n=160):
+    if isinstance(v, str):
+        return v if len(v) <= n else v[:n] + "…"
+    if isinstance(v, dict):
+        return {k: trim(x, n) for k, x in list(v.items())[:12]}
+    if isinstance(v, list):
+        return [trim(x, n) for x in v[:6]]
+    return v
+
+
+def ruta():
+    if len(sys.argv) > 1 and sys.argv[1]:
+        return os.path.expanduser(sys.argv[1])
+    return os.path.expanduser(os.environ.get("EMBERY_SOCKET", "~/Library/Application Support/Embery/embery.sock"))
+
+
+# Un solo hook para las apps que escuchan: Embery y, si está abierta, Hesia (la cripta).
+def rutas():
+    otra = os.path.expanduser(os.environ.get("HESIA_SOCKET", "~/Library/Application Support/Hesia/hesia.sock"))
+    return [ruta()] + ([otra] if os.path.exists(otra) else [])
+
+
+# Permiso: espera a todas a la vez y gana la primera que decide; las que cuelgan sin decidir no cuentan.
+def decision_de(abiertos):
+    import select, time
+    fin, datos = time.time() + ESPERA, {s: b"" for s in abiertos}
+    try:
+        while datos:
+            listos, _, _ = select.select(list(datos), [], [], max(0, fin - time.time()))
+            if not listos:
+                return {}
+            for s in listos:
+                trozo = s.recv(4096)
+                datos[s] += trozo
+                if b"\n" in datos[s]:
+                    r = json.loads(datos[s].split(b"\n")[0] or b"{}")
+                    if r.get("behavior") in ("allow", "deny"):
+                        return r
+                if not trozo or b"\n" in datos[s]:
+                    del datos[s]
+        return {}
+    finally:
+        for s in abiertos:
+            s.close()
+
+
+# «Siempre» sin sugerencias de Claude Code: la misma orden (o la herramienta) queda permitida en esta sesión.
+def regla_de(p):
+    regla = {"toolName": p.get("tool_name", "")}
+    orden = (p.get("tool_input") or {}).get("command")
+    if p.get("tool_name") == "Bash":
+        if not isinstance(orden, str) or not orden:
+            return []   # nunca «todo Bash» por la puerta de atrás
+        regla["ruleContent"] = orden
+    return [{"type": "addRules", "rules": [regla], "behavior": "allow", "destination": "session"}]
+
+
+def donde(p):
+    env = os.environ
+    p["where"] = {k: env.get(k, "") for k in ("TERM_PROGRAM", "TERM_SESSION_ID", "ITERM_SESSION_ID", "__CFBundleIdentifier", "CLAUDE_CODE_ENTRYPOINT")}
+    try:
+        import subprocess
+        tty = subprocess.run(["ps", "-o", "tty=", "-p", str(os.getppid())], capture_output=True, text=True, timeout=0.2).stdout.strip()
+        if tty and tty != "??":
+            p["where"]["tty"] = "/dev/" + tty
+    except Exception:
+        pass
+    p["where"]["pid"] = str(os.getppid())   # Hesia sube desde aquí hasta el proceso claude (cpu real)
+
+
+def main():
+    p = json.loads(sys.stdin.buffer.read() or b"{}")
+    respuesta = p.pop("tool_response", None)
+    bruto = p   # sin recortar: «Siempre» devuelve las sugerencias y la orden tal cual
+    entrada = p.get("tool_input") if p.get("tool_name") in COMPLETOS else None
+    p = trim(p)
+    if entrada is not None:
+        p["tool_input"] = entrada
+    if p.get("tool_name") == "TaskCreate" and isinstance(respuesta, dict):
+        p["tool_response"] = {"task": respuesta.get("task")}   # el id de la tarea nueva
+    p.setdefault("cwd", os.getcwd())
+    evento = p.get("hook_event_name")
+    if evento in ("SessionStart", "UserPromptSubmit", "PermissionRequest", "Notification"):
+        donde(p)
+    esperar = evento == "PermissionRequest"
+    if esperar:
+        p["embery_wait"] = True
+
+    linea = (json.dumps(p) + "\n").encode()
+    abiertos = []
+    for r in rutas():
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.settimeout(0.3)
+            s.connect(r)
+            s.sendall(linea)
+        except Exception:
+            continue
+        if esperar:
+            s.shutdown(socket.SHUT_WR)
+            abiertos.append(s)
+        else:
+            s.close()
+    r = decision_de(abiertos) if abiertos else {}
+    comportamiento = r.get("behavior")
+    if comportamiento not in ("allow", "deny"):
+        return
+    decision = {"behavior": comportamiento}
+    reglas = (bruto.get("permission_suggestions") or regla_de(bruto)) if comportamiento == "allow" and r.get("siempre") else None
+    if reglas:
+        decision["updatedPermissions"] = reglas
+    if comportamiento == "deny":
+        decision["message"] = r.get("message") or "Denegado desde Embery."
+    sys.stdout.write(json.dumps({"hookSpecificOutput": {"hookEventName": "PermissionRequest", "decision": decision}}))
+
+
+try:
+    main()
+except Exception:
+    pass
+sys.exit(0)

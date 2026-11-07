@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>es</string>
+	<key>CFBundleExecutable</key>
+	<string>Embery</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.ivanzu.embery</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
+	<key>CFBundleName</key>
+	<string>Embery</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>27.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Embery mira la pestaña activa de Chrome y Safari para cerrar las webs de tu lista mientras te concentras, y lee y controla lo que suena en Música o Spotify (Canto).</string>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Embery escucha el audio del sistema solo para dibujar el espectro del Canto mientras lo miras. No graba ni guarda nada.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Embery muestra tu próximo evento en el Hueco («Lo siguiente»). No cambia nada del Calendario.</string>
+</dict>
+</plist>

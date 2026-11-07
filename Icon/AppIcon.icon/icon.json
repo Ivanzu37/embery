@@ -1,0 +1,35 @@
+{
+  "fill": {
+    "automatic-gradient": "srgb:0.14000,0.16000,0.32000,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "cara.svg",
+          "name": "cara"
+        },
+        {
+          "glass": true,
+          "image-name": "lumen.svg",
+          "name": "lumen",
+          "opacity": 0.65
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
